@@ -1,3 +1,4 @@
+const log = require('npmlog');
 let io;
 
 module.exports = {
@@ -8,6 +9,7 @@ module.exports = {
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
       },
     });
+    log.info('connected to socket.io');
     return io;
   },
   getIO: () => {

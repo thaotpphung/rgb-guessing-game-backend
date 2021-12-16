@@ -22,6 +22,11 @@ const server = app.listen(config.PORT, () => {
   log.info(`App running on port ${config.PORT}`);
 });
 
+const io = require('./src/utils/socket').init(server);
+io.on('connection', (socket) => {
+  log.info('Client connected');
+});
+
 process.on('unhandledRejection', (err) => {
   log.error('UNHANDLED REJECTION!', err);
   server.close(() => {

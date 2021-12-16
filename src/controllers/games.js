@@ -4,7 +4,9 @@ const catchAsync = require('../utils/catchAsync');
 const factory = require('./index');
 const io = require('../utils/socket');
 
-exports.getAllGames = factory.getAll(Game);
+const MAX_SCORE_COUNT = 3;
+
+exports.getGames = factory.getAll(Game);
 
 exports.createGame = catchAsync(async (req, res) => {
   const { score, user, isWin } = req.body;
@@ -13,12 +15,16 @@ exports.createGame = catchAsync(async (req, res) => {
   if (isWin) {
     Score.find({})
       .sort('score')
-      .all((scores) => {
-        if (score > scores[0]) {
-          await Score.findByIdAndDelete(scores[0]._id);
-          await Score.create({ score, user });
-          scores[0] = newGame.score;
-          io.getIO().emit('scores', { scores });
+      .all(async (scores) => {
+        // save score
+        const savedScore = await Score.create({ score, user });
+        if (scores.length > MAX_SCORE_COUNT) {
+          // replace the smallest score
+          if (score > scores[0]) {
+            await Score.findByIdAndDelete(scores[0]._id);
+            scores[0] = savedScore;
+            io.getIO().emit('scores', { scores });
+          }
         }
       });
   }
@@ -29,5 +35,3 @@ exports.createGame = catchAsync(async (req, res) => {
     message: null,
   });
 });
-
-module.exports = router;
