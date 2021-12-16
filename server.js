@@ -1,67 +1,37 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const passport = require("passport");
-const users = require("./routes/api/users");
-const games = require("./routes/api/games");
-const index = require("./routes/api/index");
-const app = express();
-const path = require('path')
+const mongoose = require('mongoose');
+const log = require('npmlog');
+const config = require('./config');
 
-require("dotenv").config();
-// Bodyparser middleware
-app.use(
-  bodyParser.urlencoded({
-    extended: false
-  })
-);
-
-app.use(bodyParser.json());
-
-// DB Config
-const dbURL = require("./config/keys").mongoURI;
-
-// connect to mongoose
-mongoose.connect(dbURL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-  useFindAndModify: false,
-}).then(() => {
-  console.log("Connected to DB!")
-}).catch(err => {
-  console.log(err.message);
+process.on('uncaughtException', (err) => {
+  log.error('UncaughtException', err);
+  process.exit(1);
 });
 
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET , POST, PUT, PATCH, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
+mongoose
+  .connect(config.DB_CONNECTION, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
+  .then(() => log.info(`DB connection successful`));
+
+const app = require('./app');
+
+const server = app.listen(config.PORT, () => {
+  log.info(`App running on port ${config.PORT}`);
 });
 
-// Passport middleware
-app.use(passport.initialize());
-// Passport config
-require("./config/passport")(passport);
-// Routes
-app.use("/api/games", games);
-app.use("/api/users", users);
-app.use("/api", index);
+process.on('unhandledRejection', (err) => {
+  log.error('UNHANDLED REJECTION!', err);
+  server.close(() => {
+    process.exit(1);
+  });
+});
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('client/build'));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resikve(__dirname, 'client', 'build', 'index.html'))
-  })
-}
-
-const port = process.env.PORT || 5000; // process.env.port is Heroku's port if you choose to deploy the app there
-
-const server = app.listen(port);
-const io = require('./config/socket').init(server);
-
-io.on('connection', socket => {
-    console.log("Client connected!");
-})
-console.log("Connected to DB!");
+process.on('SIGTERM', () => {
+  log.error('👋 SIGTERM RECEIVED. Shutting down gracefully');
+  server.close(() => {
+    log.error('💥 Process terminated!');
+  });
+});
