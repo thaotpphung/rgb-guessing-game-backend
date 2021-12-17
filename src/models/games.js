@@ -14,9 +14,10 @@ const GameSchema = new Schema({
   },
   date: {
     type: Date,
+    default: Date.now,
   },
-  isWin: {
-    type: Boolean,
+  result: {
+    type: String,
   },
 });
 

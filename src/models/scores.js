@@ -6,7 +6,7 @@ const ScoreSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-  score: {
+  value: {
     type: Number,
   },
 });
