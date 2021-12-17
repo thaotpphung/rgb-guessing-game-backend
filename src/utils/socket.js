@@ -1,13 +1,15 @@
+const log = require('npmlog');
 let io;
 
 module.exports = {
   init: (httpServer) => {
     io = require('socket.io')(httpServer, {
       cors: {
-        origin: 'http://localhost:3000',
+        origin: '*',
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
       },
     });
+    log.info('connected to socket.io');
     return io;
   },
   getIO: () => {

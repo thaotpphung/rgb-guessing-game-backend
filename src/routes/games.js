@@ -4,8 +4,7 @@ const router = express.Router({ mergeParams: true });
 const gameController = require('../controllers/games.js');
 const middlewares = require('../middlewares/auth');
 
-router.get('', gameController.getAllgames);
-router.get('/:id', gameController.getgame);
-router.post('/', middlewares.auth, gameController.creategame);
+router.get('', gameController.getGames);
+router.post('/', middlewares.auth, gameController.createGame);
 
 module.exports = router;
