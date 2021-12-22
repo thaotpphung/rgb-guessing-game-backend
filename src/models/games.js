@@ -17,7 +17,7 @@ const GameSchema = new Schema({
     default: Date.now,
   },
   result: {
-    type: String,
+    enum: ['user', 'admin'],
   },
 });
 
